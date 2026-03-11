@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0005">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TubeAI Pro">
+<title>TubeAI Pro — YouTube Creator Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg: #06000e;
+    --surface: #0e0018;
+    --card: #120020;
+    --border: #2a1040;
+    --accent: #ff2d55;
+    --accent2: #bf5af2;
+    --accent3: #30d158;
+    --gold: #ffd60a;
+    --text: #f0e6ff;
+    --muted: #8a7aaa;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); overflow-x: hidden; }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% 10%, #1a0035 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, #200010 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; min-height: 100vh; }
+
+  /* Screens */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* Setup screen */
+  #setup-screen {
+    align-items: center; justify-content: center;
+    padding: 32px 20px;
+  }
+  .setup-box {
+    width: 100%; max-width: 440px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 32px;
+    position: relative; overflow: hidden;
+  }
+  .setup-box::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  }
+  .logo-wrap { text-align: center; margin-bottom: 32px; }
+  .logo-icon {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 16px;
+  }
+  .logo-title { font-family: var(--font-display); font-size: 42px; letter-spacing: 2px; color: #fff; line-height: 1; }
+  .logo-sub { font-size: 12px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; font-family: var(--font-mono); margin-top: 4px; }
+
+  .field-label {
+    font-size: 10px; color: var(--accent2); letter-spacing: 3px;
+    text-transform: uppercase; font-family: var(--font-mono);
+    display: block; margin-bottom: 8px;
+  }
+  .field-group { margin-bottom: 20px; }
+  .field-input {
+    width: 100%; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 13px 16px; color: var(--text);
+    font-family: var(--font-mono); font-size: 12px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .field-input:focus { border-color: var(--accent2); }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .field-hint a { color: var(--accent2); text-decoration: none; }
+
+  .btn-primary {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--accent), #c0004a);
+    border: none; border-radius: 10px;
+    color: #fff; font-family: var(--font-display);
+    font-size: 20px; letter-spacing: 2px;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .divider { text-align: center; margin: 20px 0; color: var(--muted); font-size: 12px; position: relative; }
+  .divider::before, .divider::after {
+    content: ''; position: absolute; top: 50%;
+    width: 40%; height: 1px; background: var(--border);
+  }
+  .divider::before { left: 0; } .divider::after { right: 0; }
+
+  /* Google signin button */
+  .google-btn {
+    width: 100%; padding: 14px;
+    background: #fff; border: none; border-radius: 10px;
+    color: #333; font-family: var(--font-body); font-size: 15px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
+    transition: box-shadow 0.2s;
+  }
+  .google-btn:hover { box-shadow: 0 4px 20px rgba(255,255,255,0.2); }
+  .google-logo { width: 20px; height: 20px; }
+
+  /* Main App Layout */
+  #main-screen { flex-direction: column; }
+
+  .topbar {
+    background: rgba(14, 0, 24, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo { font-family: var(--font-display); font-size: 26px; letter-spacing: 2px; color: #fff; }
+  .topbar-logo span { color: var(--accent); }
+  .topbar-user { display: flex; align-items: center; gap: 10px; }
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 2px solid var(--accent2); object-fit: cover;
+  }
+  .user-name { font-size: 13px; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Nav tabs */
+  .nav-tabs {
+    display: flex; overflow-x: auto; gap: 0;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex-shrink: 0; padding: 12px 18px;
+    font-size: 12px; font-family: var(--font-mono);
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Content */
+  .tab-content { display: none; padding: 20px; flex: 1; }
+  .tab-content.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-bottom: 16px;
+    position: relative; overflow: hidden;
+  }
+  .card-title {
+    font-size: 10px; color: var(--muted); letter-spacing: 3px;
+    text-transform: uppercase; font-family: var(--font-mono); margin-bottom: 14px;
+  }
+
+  /* Stat grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-box {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .stat-val { font-family: var(--font-display); font-size: 32px; color: #fff; line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; font-family: var(--font-mono); margin-top: 4px; }
+  .stat-change { font-size: 11px; color: var(--accent3); margin-top: 4px; font-family: var(--font-mono); }
+
+  /* Video list */
+  .video-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px; border-radius: 12px;
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  }
+  .video-item:hover { border-color: var(--accent2); background: rgba(191,90,242,0.05); }
+  .video-thumb { width: 80px; height: 52px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #1a0035; }
+  .video-info { flex: 1; min-width: 0; }
+  .video-title { font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .video-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 10px; flex-wrap: wrap; }
+  .seo-badge {
+    font-size: 10px; font-family: var(--font-mono);
+    padding: 2px 8px; border-radius: 20px; font-weight: 600;
+  }
+  .seo-good { background: rgba(48,209,88,0.15); color: var(--accent3); border: 1px solid rgba(48,209,88,0.3); }
+  .seo-warn { background: rgba(255,214,10,0.15); color: var(--gold); border: 1px solid rgba(255,214,10,0.3); }
+  .seo-bad { background: rgba(255,45,85,0.15); color: var(--accent); border: 1px solid rgba(255,45,85,0.3); }
+
+  /* Score rings */
+  .score-row { display: flex; justify-content: space-around; padding: 12px 0; flex-wrap: wrap; gap: 16px; }
+  .score-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .score-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; font-family: var(--font-mono); }
+
+  /* Optimizer */
+  .optimizer-result { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .suggestion-pill {
+    display: inline-block; padding: 4px 12px;
+    border-radius: 20px; font-size: 12px; font-family: var(--font-mono);
+    margin: 4px; cursor: pointer; transition: transform 0.1s;
+  }
+  .suggestion-pill:active { transform: scale(0.95); }
+  .pill-green { background: rgba(48,209,88,0.12); color: var(--accent3); border: 1px solid rgba(48,209,88,0.25); }
+  .pill-red { background: rgba(255,45,85,0.12); color: var(--accent); border: 1px solid rgba(255,45,85,0.25); }
+  .pill-gold { background: rgba(255,214,10,0.12); color: var(--gold); border: 1px solid rgba(255,214,10,0.25); }
+  .pill-purple { background: rgba(191,90,242,0.12); color: var(--accent2); border: 1px solid rgba(191,90,242,0.25); }
+
+  .title-option {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+    font-size: 14px; line-height: 1.5; cursor: pointer;
+    transition: border-color 0.2s; position: relative;
+  }
+  .title-option:hover { border-color: var(--accent2); }
+  .title-option .copy-hint { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-top: 6px; }
+
+  .desc-box {
+    background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; font-size: 12px;
+    font-family: var(--font-mono); color: #bba8dd; line-height: 1.8;
+    white-space: pre-wrap; cursor: pointer; max-height: 200px; overflow-y: auto;
+  }
+
+  /* Channel stats */
+  .channel-header {
+    display: flex; gap: 16px; align-items: center; margin-bottom: 20px;
+  }
+  .channel-avatar { width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--accent2); object-fit: cover; }
+  .channel-name { font-family: var(--font-display); font-size: 24px; letter-spacing: 1px; }
+  .channel-handle { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* Tag research */
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .tag-item {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px;
+    font-family: var(--font-mono); border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03); cursor: pointer;
+    transition: background 0.2s; color: var(--text);
+  }
+  .tag-item:hover { background: rgba(191,90,242,0.15); border-color: var(--accent2); }
+  .tag-volume { font-size: 9px; color: var(--muted); margin-left: 4px; }
+
+  /* Best times */
+  .time-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .time-day { font-size: 9px; color: var(--muted); text-align: center; font-family: var(--font-mono); margin-bottom: 4px; }
+  .time-slot {
+    height: 32px; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 8px; font-family: var(--font-mono); color: transparent;
+    transition: transform 0.1s;
+  }
+  .time-slot:hover { transform: scale(1.1); color: #fff; }
+
+  /* Competitor */
+  .comp-stat { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .comp-stat:last-child { border-bottom: none; }
+  .comp-stat-label { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .comp-stat-val { font-size: 14px; font-weight: 600; font-family: var(--font-display); letter-spacing: 1px; }
+
+  /* Loading */
+  .loading-bar {
+    height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    border-radius: 2px; animation: loadbar 1.5s ease-in-out infinite;
+    width: 60%;
+  }
+  @keyframes loadbar { 0%,100% { transform: scaleX(0.3) translateX(-100%); } 50% { transform: scaleX(1) translateX(0); } }
+  .loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 40px; }
+  .loading-text { font-size: 13px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--accent3); color: #000; padding: 10px 24px;
+    border-radius: 20px; font-size: 13px; font-weight: 600;
+    z-index: 999; animation: toastIn 0.3s ease;
+    white-space: nowrap;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 200; display: none; align-items: flex-end;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    width: 100%; background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px; max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 24px; }
+  .modal-close { float: right; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+
+  /* Error */
+  .error-box {
+    background: rgba(255,45,85,0.1); border: 1px solid rgba(255,45,85,0.3);
+    border-radius: 10px; padding: 14px 16px;
+    color: #ff8aaa; font-size: 13px; font-family: var(--font-mono); margin-top: 12px;
+  }
+
+  /* Insight row */
+  .insight { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; }
+  .insight:last-child { border-bottom: none; }
+  .insight-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .insight-text { font-size: 13px; line-height: 1.6; color: #cbb8ef; }
+
+  /* Progress bar */
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+  select.field-input { appearance: none; }
+  textarea.field-input { resize: vertical; min-height: 90px; }
+
+  /* Monetization */
+  .money-card {
+    background: linear-gradient(135deg, rgba(255,214,10,0.08), rgba(255,45,85,0.05));
+    border: 1px solid rgba(255,214,10,0.2); border-radius: 14px; padding: 20px;
+    margin-bottom: 12px;
+  }
+  .money-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px; }
+
+  .install-banner {
+    background: linear-gradient(135deg, var(--accent2), #6b21a8);
+    border-radius: 14px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px; cursor: pointer;
+  }
+  .install-banner-text { font-size: 14px; font-weight: 600; }
+  .install-banner-sub { font-size: 11px; opacity: 0.8; font-family: var(--font-mono); }
+
+  @media (min-width: 600px) {
+    .stat-grid { grid-template-columns: repeat(4, 1fr); }
+    .tab-content { padding: 28px 32px; max-width: 800px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="screen active">
+  <div class="setup-box">
+    <div class="logo-wrap">
+      <div class="logo-icon">▶</div>
+      <div class="logo-title">TUBEAI PRO</div>
+      <div class="logo-sub">YouTube Creator Suite</div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Google OAuth Client ID</label>
+      <input type="text" class="field-input" id="client-id-input" placeholder="xxxx.apps.googleusercontent.com">
+      <div class="field-hint">
+        Get free at <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> →
+        APIs & Services → Credentials → Create OAuth 2.0 Client ID (Web App). Add your site URL as authorized origin.
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">YouTube Data API Key</label>
+      <input type="text" class="field-input" id="api-key-input" placeholder="AIzaSy...">
+      <div class="field-hint">Same Google Cloud project → Enable "YouTube Data API v3" → Create API Key</div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">AI API Key — Any Provider Supported</label>
+      <input type="text" class="field-input" id="claude-key-input" placeholder="Paste any AI key here...">
+      <div class="field-hint">
+        Works with <strong style="color:#30d158">any</strong> of these — paste your key and it auto-detects:<br><br>
+        🟢 <strong>Gemini</strong> (FREE) → <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key<br>
+        🤗 <strong>HuggingFace</strong> (FREE) → <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a> → New Token<br>
+        🟣 <strong>Claude</strong> → <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys<br>
+        🔵 <strong>ChatGPT</strong> → <a href="https://platform.openai.com" target="_blank">platform.openai.com</a> → API Keys
+      </div>
+    </div>
+
+    <button class="btn-primary" id="setup-btn" onclick="setupAndLogin()">
+      CONNECT & LOGIN WITH GOOGLE
+    </button>
+    <div id="setup-error" style="display:none" class="error-box"></div>
+
+    <div style="margin-top:24px; text-align:center; font-size:11px; color:var(--muted); font-family:var(--font-mono); line-height:1.8;">
+      🔒 All keys stored locally on your device only<br>
+      🤖 Works with Gemini (Free) · Claude · ChatGPT · Any AI<br>
+      📱 Install: Chrome → ⋮ menu → Add to Home Screen
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP SCREEN -->
+<div id="main-screen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">TUBE<span>AI</span></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="ai-badge" style="font-size:10px;font-family:var(--font-mono);color:var(--accent3);background:rgba(48,209,88,0.1);border:1px solid rgba(48,209,88,0.3);padding:3px 10px;border-radius:20px;display:none"></div>
+      <div class="topbar-user">
+        <img class="user-avatar" id="user-avatar" src="" alt="">
+        <span class="user-name" id="user-name"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+    <div class="nav-tab" onclick="switchTab('videos')">🎬 My Videos</div>
+    <div class="nav-tab" onclick="switchTab('optimizer')">⚡ Optimizer</div>
+    <div class="nav-tab" onclick="switchTab('tags')">🏷️ Tag Research</div>
+    <div class="nav-tab" onclick="switchTab('competitor')">🔍 Competitor</div>
+    <div class="nav-tab" onclick="switchTab('timing')">⏰ Best Times</div>
+    <div class="nav-tab" onclick="switchTab('monetize')">💰 Monetize</div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div id="install-banner" class="install-banner" onclick="installApp()" style="display:none">
+      <div style="font-size:28px">📲</div>
+      <div>
+        <div class="install-banner-text">Install TubeAI Pro as App</div>
+        <div class="install-banner-sub">Works offline · Home screen icon · Faster</div>
+      </div>
+    </div>
+
+    <div id="dashboard-loading" class="loading-wrap">
+      <div class="loading-bar"></div>
+      <div class="loading-text">Loading channel data...</div>
+    </div>
+    <div id="dashboard-content" style="display:none">
+      <div class="card">
+        <div id="channel-header-html"></div>
+        <div class="stat-grid" id="channel-stats"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Performance Insights</div>
+        <div id="perf-insights"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Videos Performance</div>
+        <div id="recent-perf"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEOS TAB -->
+  <div id="tab-videos" class="tab-content">
+    <div id="videos-loading" class="loading-wrap">
+      <div class="loading-bar"></div>
+      <div class="loading-text">Fetching your videos...</div>
+    </div>
+    <div id="videos-list"></div>
+  </div>
+
+  <!-- OPTIMIZER TAB -->
+  <div id="tab-optimizer" class="tab-content">
+    <div class="card">
+      <div class="card-title">AI Video Optimizer</div>
+      <div class="field-group">
+        <label class="field-label">Select Your Video</label>
+        <select class="field-input" id="optimizer-select">
+          <option value="">Loading your videos...</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="runOptimizer()">⚡ OPTIMIZE WITH AI</button>
+      <div id="optimizer-error" class="error-box" style="display:none"></div>
+    </div>
+    <div id="optimizer-result"></div>
+  </div>
+
+  <!-- TAG RESEARCH TAB -->
+  <div id="tab-tags" class="tab-content">
+    <div class="card">
+      <div class="card-title">Tag & Keyword Research</div>
+      <div class="field-group">
+        <label class="field-label">Enter Topic or Niche</label>
+        <input type="text" class="field-input" id="tag-input" placeholder="e.g. cooking tutorial, gaming, tech review...">
+      </div>
+      <button class="btn-primary" onclick="researchTags()">🔍 FIND BEST TAGS</button>
+    </div>
+    <div id="tag-results"></div>
+  </div>
+
+  <!-- COMPETITOR TAB -->
+  <div id="tab-competitor" class="tab-content">
+    <div class="card">
+      <div class="card-title">Competitor Channel Analysis</div>
+      <div class="field-group">
+        <label class="field-label">Channel URL or ID</label>
+        <input type="text" class="field-input" id="comp-input" placeholder="https://youtube.com/@channelname or UCxxxxx">
+      </div>
+      <button class="btn-primary" onclick="analyzeCompetitor()">🔍 ANALYZE CHANNEL</button>
+    </div>
+    <div id="comp-result"></div>
+  </div>
+
+  <!-- BEST TIMES TAB -->
+  <div id="tab-timing" class="tab-content">
+    <div class="card">
+      <div class="card-title">Best Upload Times</div>
+      <div id="timing-content"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Upload Schedule</div>
+      <div class="field-group">
+        <label class="field-label">Your Content Niche</label>
+        <input type="text" class="field-input" id="niche-input" placeholder="e.g. tech reviews, vlogs, cooking...">
+      </div>
+      <button class="btn-primary" onclick="getSchedule()">📅 GET SCHEDULE</button>
+      <div id="schedule-result" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- MONETIZE TAB -->
+  <div id="tab-monetize" class="tab-content">
+    <div id="monetize-content"></div>
+  </div>
+</div>
+
+<!-- VIDEO DETAIL MODAL -->
+<div class="modal-overlay" id="video-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ─── Universal AI Adapter ─────────────────────────────────
+// Auto-detects provider from key format and routes accordingly
+// Supports: Gemini, Claude, OpenAI/ChatGPT, and any OpenAI-compatible API
+
+function detectProvider(key) {
+  if (!key) return null;
+  key = key.trim();
+  if (key.startsWith('AIza'))          return 'gemini';
+  if (key.startsWith('sk-ant-'))       return 'claude';
+  if (key.startsWith('hf_'))           return 'huggingface';
+  if (key.startsWith('sk-proj-'))      return 'openai';
+  if (key.startsWith('sk-') && !key.startsWith('sk-ant-')) return 'openai';
+  return 'openai';
+}
+
+function getProviderLabel(key) {
+  const p = detectProvider(key);
+  if (p === 'gemini')       return '🟢 Gemini';
+  if (p === 'claude')       return '🟣 Claude';
+  if (p === 'openai')       return '🔵 ChatGPT';
+  if (p === 'huggingface')  return '🤗 HuggingFace';
+  return '⚪ AI';
+}
+
+async function universalAI(prompt, key) {
+  const provider = detectProvider(key);
+  key = key.trim();
+
+  // ── GEMINI ──────────────────────────────────────────────
+  if (provider === 'gemini') {
+    // Try models in order of free quota availability
+    const models = [
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-8b',
+      'gemini-2.0-flash-lite',
+      'gemini-2.0-flash'
+    ];
+    let lastError = '';
+    for (const model of models) {
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
+            })
+          }
+        );
+        const d = await res.json();
+        if (d.error) { lastError = d.error.message; continue; }
+        const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (text) return text;
+      } catch(e) { lastError = e.message; }
+    }
+    throw new Error('Gemini quota exceeded. Please wait a minute and try again. Error: ' + lastError);
+  }
+
+  // ── CLAUDE (Anthropic) ───────────────────────────────────
+  if (provider === 'claude') {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error('Claude: ' + d.error.message);
+    return d.content?.map(b => b.text || '').join('') || '';
+  }
+
+  // ── HUGGING FACE ─────────────────────────────────────────
+  if (provider === 'huggingface') {
+    // Use HuggingFace's unified inference endpoint (supports CORS from browser)
+    const models = [
+      'mistralai/Mistral-7B-Instruct-v0.3',
+      'HuggingFaceH4/zephyr-7b-beta',
+      'microsoft/Phi-3-mini-4k-instruct',
+      'google/gemma-2-2b-it'
+    ];
+    let lastError = '';
+    for (const model of models) {
+      try {
+        const res = await fetch(`https://api-inference.huggingface.co/v1/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + key
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 1500,
+            temperature: 0.7,
+            stream: false
+          })
+        });
+        if (!res.ok) { lastError = `Model ${model} failed (${res.status})`; continue; }
+        const d = await res.json();
+        if (d.error) { lastError = typeof d.error === 'string' ? d.error : JSON.stringify(d.error); continue; }
+        const text = d.choices?.[0]?.message?.content || '';
+        if (text) return text;
+      } catch(e) { lastError = e.message; continue; }
+    }
+    throw new Error('HuggingFace: ' + lastError);
+  }
+
+
+  if (provider === 'openai') {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error('OpenAI: ' + d.error.message);
+    return d.choices?.[0]?.message?.content || '';
+  }
+
+  throw new Error('Unknown AI provider. Paste a valid Gemini, Claude, or OpenAI key.');
+}
+
+// Helper: call AI and parse JSON response
+async function universalAIJson(prompt, key) {
+  const raw = await universalAI(prompt, key);
+  const cleaned = raw.replace(/```json|```/g, '').trim();
+  // Find JSON object in response
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('AI returned invalid response. Try again.');
+  return JSON.parse(match[0]);
+}
+
+// ─── State ───────────────────────────────────────────────
+let STATE = {
+  clientId: '', apiKey: '', claudeKey: '',
+  accessToken: '', videos: [], channelId: '',
+  channelData: null, deferredInstall: null
+};
+
+// ─── PWA Install ─────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); STATE.deferredInstall = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+function installApp() {
+  if (STATE.deferredInstall) {
+    STATE.deferredInstall.prompt();
+    STATE.deferredInstall.userChoice.then(() => {
+      document.getElementById('install-banner').style.display = 'none';
+    });
+  }
+}
+
+// ─── Setup & Login ───────────────────────────────────────
+function setupAndLogin() {
+  const clientId = document.getElementById('client-id-input').value.trim();
+  const apiKey = document.getElementById('api-key-input').value.trim();
+  const claudeKey = document.getElementById('claude-key-input').value.trim();
+  const errEl = document.getElementById('setup-error');
+  errEl.style.display = 'none';
+
+  if (!clientId || !apiKey) {
+    errEl.textContent = '❌ Please enter your Google Client ID and API Key.';
+    errEl.style.display = 'block'; return;
+  }
+  STATE.clientId = clientId; STATE.apiKey = apiKey; STATE.claudeKey = claudeKey;
+  localStorage.setItem('tubeai_cid', clientId);
+  localStorage.setItem('tubeai_akey', apiKey);
+  localStorage.setItem('tubeai_ckey', claudeKey);
+
+  // Google OAuth popup
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile',
+    callback: (resp) => {
+      if (resp.error) { errEl.textContent = '❌ Login failed: ' + resp.error; errEl.style.display = 'block'; return; }
+      STATE.accessToken = resp.access_token;
+      loadApp();
+    }
+  });
+  client.requestAccessToken();
+}
+
+// Load saved keys
+window.addEventListener('load', () => {
+  const cid = localStorage.getItem('tubeai_cid');
+  const ak = localStorage.getItem('tubeai_akey');
+  const ck = localStorage.getItem('tubeai_ckey');
+  if (cid) document.getElementById('client-id-input').value = cid;
+  if (ak) document.getElementById('api-key-input').value = ak;
+  if (ck) document.getElementById('claude-key-input').value = ck;
+});
+
+// ─── Load App After Login ─────────────────────────────────
+async function loadApp() {
+  document.getElementById('setup-screen').classList.remove('active');
+  document.getElementById('main-screen').classList.add('active');
+
+  // Get user profile
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+      headers: { Authorization: 'Bearer ' + STATE.accessToken }
+    });
+    const u = await r.json();
+    document.getElementById('user-avatar').src = u.picture || '';
+    document.getElementById('user-name').textContent = u.given_name || u.name || '';
+  } catch(e) {}
+
+  // Show AI provider badge
+  if (STATE.claudeKey) {
+    const badge = document.getElementById('ai-badge');
+    badge.textContent = getProviderLabel(STATE.claudeKey);
+    badge.style.display = 'block';
+  }
+
+  loadDashboard();
+  loadVideos();
+  renderTiming();
+  renderMonetize();
+}
+
+// ─── YouTube API Helper ───────────────────────────────────
+async function ytFetch(url) {
+  const sep = url.includes('?') ? '&' : '?';
+  const r = await fetch(url + sep + 'key=' + STATE.apiKey, {
+    headers: { Authorization: 'Bearer ' + STATE.accessToken }
+  });
+  return r.json();
+}
+
+// ─── Dashboard ────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    // Get channel
+    const ch = await ytFetch('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&mine=true');
+    if (!ch.items?.length) throw new Error('No channel found');
+    const c = ch.items[0];
+    STATE.channelId = c.id; STATE.channelData = c;
+    const s = c.statistics; const sn = c.snippet;
+
+    document.getElementById('channel-header-html').innerHTML = `
+      <div class="channel-header">
+        <img class="channel-avatar" src="${sn.thumbnails?.default?.url || ''}" alt="">
+        <div>
+          <div class="channel-name">${sn.title}</div>
+          <div class="channel-handle">@${sn.customUrl?.replace('@','') || c.id}</div>
+        </div>
+      </div>`;
+
+    const fmt = n => parseInt(n||0).toLocaleString();
+    const engRate = s.subscriberCount > 0 ? ((parseInt(s.viewCount)/parseInt(s.subscriberCount))*100).toFixed(1) : 'N/A';
+
+    document.getElementById('channel-stats').innerHTML = `
+      <div class="stat-box"><div class="stat-val">${fmtNum(s.subscriberCount)}</div><div class="stat-label">Subscribers</div></div>
+      <div class="stat-box"><div class="stat-val">${fmtNum(s.viewCount)}</div><div class="stat-label">Total Views</div></div>
+      <div class="stat-box"><div class="stat-val">${fmt(s.videoCount)}</div><div class="stat-label">Videos</div></div>
+      <div class="stat-box"><div class="stat-val">${engRate}%</div><div class="stat-label">View/Sub Ratio</div></div>`;
+
+    // Performance insights
+    const insights = generateInsights(s);
+    document.getElementById('perf-insights').innerHTML = insights.map(i =>
+      `<div class="insight"><div class="insight-icon">${i.icon}</div><div class="insight-text">${i.text}</div></div>`
+    ).join('');
+
+    document.getElementById('dashboard-loading').style.display = 'none';
+    document.getElementById('dashboard-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('dashboard-loading').innerHTML = `<div class="error-box">❌ ${e.message}. Check your API key and OAuth scope.</div>`;
+  }
+}
+
+function fmtNum(n) {
+  n = parseInt(n || 0);
+  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toString();
+}
+
+function generateInsights(stats) {
+  const subs = parseInt(stats.subscriberCount || 0);
+  const views = parseInt(stats.viewCount || 0);
+  const videos = parseInt(stats.videoCount || 0);
+  const avgViews = videos > 0 ? Math.round(views / videos) : 0;
+  const insights = [];
+  if (subs < 1000) insights.push({ icon: '🎯', text: `You're ${1000 - subs} subscribers away from the 1K milestone needed for YouTube monetization. Focus on 2-3 videos per week with strong SEO titles.` });
+  else if (subs < 10000) insights.push({ icon: '🚀', text: `Great start with ${fmtNum(subs)} subscribers! Aim for 10K to unlock custom thumbnails for all videos and stronger algorithm signals.` });
+  else insights.push({ icon: '⭐', text: `Strong channel with ${fmtNum(subs)} subscribers. Focus on maintaining upload consistency and improving click-through rates to accelerate growth.` });
+  if (avgViews > 0) insights.push({ icon: '👁️', text: `Your average video gets ~${fmtNum(avgViews)} views. Optimizing titles and thumbnails can typically improve this by 30-60%.` });
+  insights.push({ icon: '💡', text: 'Use the Optimizer tab to get AI-powered title, description and tag improvements for each of your videos.' });
+  insights.push({ icon: '📅', text: 'Check the Best Times tab for optimal upload schedule based on your niche and audience location.' });
+  return insights;
+}
+
+// ─── Load Videos ──────────────────────────────────────────
+async function loadVideos() {
+  try {
+    // Get uploads playlist
+    const ch = await ytFetch('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true');
+    const uploadsId = ch.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadsId) throw new Error('No uploads playlist');
+
+    const pl = await ytFetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=25&playlistId=${uploadsId}`);
+    const ids = pl.items?.map(i => i.snippet.resourceId.videoId).join(',');
+    if (!ids) throw new Error('No videos');
+
+    const vids = await ytFetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${ids}`);
+    STATE.videos = vids.items || [];
+
+    renderVideosList();
+    populateOptimizerSelect();
+    renderRecentPerf();
+  } catch(e) {
+    document.getElementById('videos-loading').innerHTML = `<div class="error-box">❌ ${e.message}</div>`;
+  }
+}
+
+function seoScore(v) {
+  let s = 0;
+  const title = v.snippet.title || '';
+  const desc = v.snippet.description || '';
+  const tags = v.snippet.tags || [];
+  if (title.length >= 40 && title.length <= 70) s += 25;
+  else if (title.length >= 30) s += 15;
+  if (desc.length > 300) s += 25;
+  else if (desc.length > 100) s += 15;
+  if (tags.length >= 10) s += 25;
+  else if (tags.length >= 5) s += 15;
+  const views = parseInt(v.statistics?.viewCount || 0);
+  const subs = parseInt(STATE.channelData?.statistics?.subscriberCount || 1);
+  const ratio = views / subs;
+  if (ratio > 0.5) s += 25; else if (ratio > 0.1) s += 15;
+  return s;
+}
+
+function seoBadge(score) {
+  if (score >= 75) return `<span class="seo-badge seo-good">${score}</span>`;
+  if (score >= 50) return `<span class="seo-badge seo-warn">${score}</span>`;
+  return `<span class="seo-badge seo-bad">${score}</span>`;
+}
+
+function renderVideosList() {
+  document.getElementById('videos-loading').style.display = 'none';
+  const html = STATE.videos.map(v => {
+    const s = v.snippet; const st = v.statistics;
+    const score = seoScore(v);
+    const thumb = s.thumbnails?.medium?.url || s.thumbnails?.default?.url || '';
+    return `<div class="video-item" onclick="openVideoDetail('${v.id}')">
+      <img class="video-thumb" src="${thumb}" alt="">
+      <div class="video-info">
+        <div class="video-title">${s.title}</div>
+        <div class="video-meta">
+          <span>👁 ${fmtNum(st.viewCount)}</span>
+          <span>👍 ${fmtNum(st.likeCount)}</span>
+          <span>💬 ${fmtNum(st.commentCount)}</span>
+          ${seoBadge(score)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('videos-list').innerHTML = html || '<div class="error-box">No videos found.</div>';
+}
+
+function renderRecentPerf() {
+  if (!STATE.videos.length) return;
+  const top5 = [...STATE.videos].sort((a,b) => parseInt(b.statistics.viewCount) - parseInt(a.statistics.viewCount)).slice(0,5);
+  const max = parseInt(top5[0].statistics.viewCount);
+  const html = top5.map(v => {
+    const pct = max > 0 ? (parseInt(v.statistics.viewCount)/max*100).toFixed(0) : 0;
+    return `<div style="margin-bottom:12px">
+      <div style="font-size:12px;color:var(--text);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.snippet.title}</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-bottom:4px">${fmtNum(v.statistics.viewCount)} views</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('recent-perf').innerHTML = html;
+}
+
+// ─── Optimizer ────────────────────────────────────────────
+function populateOptimizerSelect() {
+  const sel = document.getElementById('optimizer-select');
+  sel.innerHTML = '<option value="">Choose a video to optimize...</option>' +
+    STATE.videos.map(v => `<option value="${v.id}">${v.snippet.title.slice(0,60)}</option>`).join('');
+}
+
+async function runOptimizer() {
+  const vid = document.getElementById('optimizer-select').value;
+  const errEl = document.getElementById('optimizer-error');
+  errEl.style.display = 'none';
+  if (!vid) { errEl.textContent = '❌ Please select a video.'; errEl.style.display = 'block'; return; }
+  if (!STATE.claudeKey) { errEl.textContent = '❌ AI key required. Go back to setup and add your Gemini, Claude, or OpenAI key.'; errEl.style.display = 'block'; return; }
+
+  const v = STATE.videos.find(x => x.id === vid);
+  if (!v) return;
+
+  const providerLabel = getProviderLabel(STATE.claudeKey);
+  document.getElementById('optimizer-result').innerHTML = `<div class="loading-wrap"><div class="loading-bar"></div><div class="loading-text">${providerLabel} analyzing your video...</div></div>`;
+
+  const prompt = `You are a top YouTube SEO expert. Analyze this video and provide specific optimization.
+
+Title: "${v.snippet.title}"
+Description: """${(v.snippet.description||'').slice(0,1200)}"""
+Tags: ${(v.snippet.tags||[]).join(', ') || 'none'}
+Views: ${v.statistics.viewCount} | Likes: ${v.statistics.likeCount} | Comments: ${v.statistics.commentCount}
+
+Return ONLY valid JSON (no markdown, no explanation):
+{"scores":{"title":0,"description":0,"tags":0,"overall":0},"titleIssues":[""],"titles":["","",""],"descIssues":[""],"desc":"full optimized description","missingTags":[""],"removeTags":[""],"bestTags":["","","","","","","","","",""],"thumbnailTips":["","",""],"growthTips":["","",""],"verdict":"","engagementRate":""}`;
+
+  try {
+    const a = await universalAIJson(prompt, STATE.claudeKey);
+    renderOptimizerResult(v, a);
+  } catch(e) {
+    document.getElementById('optimizer-result').innerHTML = `<div class="error-box">❌ AI analysis failed: ${e.message}</div>`;
+  }
+}
+
+function renderOptimizerResult(v, a) {
+  const scoreColor = s => s >= 75 ? 'var(--accent3)' : s >= 50 ? 'var(--gold)' : 'var(--accent)';
+  const ring = (val, label) => {
+    const r = 28, circ = 2*Math.PI*r, dash = val/100*circ;
+    const col = scoreColor(val);
+    return `<div class="score-item">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="#1a0035" stroke-width="6"/>
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${col}" stroke-width="6"
+          stroke-dasharray="${dash} ${circ}" stroke-linecap="round" transform="rotate(-90 36 36)"/>
+        <text x="36" y="40" text-anchor="middle" fill="${col}" font-size="14" font-weight="700" font-family="'JetBrains Mono',monospace">${val}</text>
+      </svg>
+      <div class="score-label">${label}</div>
+    </div>`;
+  };
+
+  document.getElementById('optimizer-result').innerHTML = `<div class="optimizer-result">
+    <div class="card">
+      <div class="card-title">SEO Score Analysis</div>
+      <div class="score-row">
+        ${ring(a.scores.overall,'Overall')}${ring(a.scores.title,'Title')}${ring(a.scores.description,'Desc')}${ring(a.scores.tags,'Tags')}
+      </div>
+      <div style="margin-top:16px;padding:14px;background:rgba(255,255,255,0.03);border-radius:10px;border-left:3px solid var(--gold);font-size:13px;color:#ddd;font-style:italic;line-height:1.6">${a.verdict}</div>
+      ${a.engagementRate ? `<div style="margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">Engagement Rate: <span style="color:var(--accent3)">${a.engagementRate}</span></div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Optimized Title Options <span style="font-size:9px;color:var(--muted)">(tap to copy)</span></div>
+      ${a.titleIssues?.map(i=>`<div style="font-size:12px;color:var(--accent);font-family:var(--font-mono);margin-bottom:6px">⚠ ${i}</div>`).join('')||''}
+      ${a.titles.map((t,i)=>`<div class="title-option" onclick="copyText('${t.replace(/'/g,"\\'")}')">
+        <span style="color:var(--accent);font-family:var(--font-mono);font-size:10px;margin-right:8px">#${i+1}</span>${t}
+        <div class="copy-hint">Tap to copy</div>
+      </div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Optimized Description <span style="font-size:9px;color:var(--muted)">(tap to copy)</span></div>
+      ${a.descIssues?.map(i=>`<div style="font-size:12px;color:var(--gold);font-family:var(--font-mono);margin-bottom:6px">⚠ ${i}</div>`).join('')||''}
+      <div class="desc-box" onclick="copyText(this.textContent)">${a.desc}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tag Optimization</div>
+      <div style="margin-bottom:12px"><div style="font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:8px">Add These Tags</div>
+      <div class="tag-cloud">${(a.missingTags||[]).map(t=>`<span class="suggestion-pill pill-red">${t}</span>`).join('')}</div></div>
+      <div style="margin-bottom:12px"><div style="font-size:10px;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:8px">Best Complete Tag Set (tap to copy all)</div>
+      <div class="tag-cloud" onclick="copyText('${(a.bestTags||[]).join(', ')}')">${(a.bestTags||[]).map(t=>`<span class="suggestion-pill pill-green">${t}</span>`).join('')}</div></div>
+      ${a.removeTags?.length ? `<div><div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:8px">Remove / Weak Tags</div>
+      <div class="tag-cloud">${a.removeTags.map(t=>`<span class="suggestion-pill pill-gold">${t}</span>`).join('')}</div></div>`:''}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Thumbnail Tips</div>
+      ${(a.thumbnailTips||[]).map(t=>`<div class="insight"><div class="insight-icon">🖼️</div><div class="insight-text">${t}</div></div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Growth Strategies</div>
+      ${(a.growthTips||[]).map(t=>`<div class="insight"><div class="insight-icon">📈</div><div class="insight-text">${t}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ─── Tag Research ─────────────────────────────────────────
+async function researchTags() {
+  const topic = document.getElementById('tag-input').value.trim();
+  if (!topic) return;
+  if (!STATE.claudeKey) { document.getElementById('tag-results').innerHTML = '<div class="error-box">❌ Add your AI key in setup (Gemini/Claude/OpenAI).</div>'; return; }
+
+  document.getElementById('tag-results').innerHTML = `<div class="loading-wrap"><div class="loading-bar"></div><div class="loading-text">${getProviderLabel(STATE.claudeKey)} researching tags...</div></div>`;
+
+  const prompt = `You are a YouTube SEO expert. For the topic "${topic}", generate the best tags.
+
+Return ONLY valid JSON (no markdown, no explanation):
+{"broad":["tag1","tag2","tag3","tag4","tag5"],"niche":["tag1","tag2","tag3","tag4","tag5"],"trending":["tag1","tag2","tag3","tag4","tag5"],"longTail":["tag1","tag2","tag3","tag4","tag5"],"avoid":["tag1","tag2"],"titleKeywords":["word1","word2","word3","word4"],"descKeywords":["word1","word2","word3","word4"],"tip":"one actionable insight about this niche"}`;
+
+  try {
+    const a = await universalAIJson(prompt, STATE.claudeKey);
+
+    document.getElementById('tag-results').innerHTML = `
+      <div class="card"><div class="card-title">Broad Tags (High Volume)</div><div class="tag-cloud">${a.broad.map(t=>`<span class="suggestion-pill pill-green" onclick="copyText('${t}')">${t}</span>`).join('')}</div></div>
+      <div class="card"><div class="card-title">Niche Tags (Easier to Rank)</div><div class="tag-cloud">${a.niche.map(t=>`<span class="suggestion-pill pill-purple" onclick="copyText('${t}')">${t}</span>`).join('')}</div></div>
+      <div class="card"><div class="card-title">Trending Tags</div><div class="tag-cloud">${a.trending.map(t=>`<span class="suggestion-pill pill-red" onclick="copyText('${t}')">${t}</span>`).join('')}</div></div>
+      <div class="card"><div class="card-title">Long-tail Tags (High Intent)</div><div class="tag-cloud">${a.longTail.map(t=>`<span class="suggestion-pill pill-gold" onclick="copyText('${t}')">${t}</span>`).join('')}</div></div>
+      <div class="card">
+        <div class="card-title">Title Keywords</div><div class="tag-cloud">${a.titleKeywords.map(t=>`<span class="suggestion-pill pill-green">${t}</span>`).join('')}</div>
+        <div class="card-title" style="margin-top:14px">Description Keywords</div><div class="tag-cloud">${a.descKeywords.map(t=>`<span class="suggestion-pill pill-purple">${t}</span>`).join('')}</div>
+        <div class="insight" style="margin-top:14px"><div class="insight-icon">💡</div><div class="insight-text">${a.tip}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚠ Avoid These (Overused)</div>
+        <div class="tag-cloud">${a.avoid.map(t=>`<span class="suggestion-pill pill-red">${t}</span>`).join('')}</div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('tag-results').innerHTML = `<div class="error-box">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── Competitor ───────────────────────────────────────────
+async function analyzeCompetitor() {
+  const input = document.getElementById('comp-input').value.trim();
+  if (!input) return;
+
+  document.getElementById('comp-result').innerHTML = '<div class="loading-wrap"><div class="loading-bar"></div><div class="loading-text">Fetching competitor data...</div></div>';
+
+  try {
+    let channelId = input;
+    // Extract channel ID or handle
+    const handleMatch = input.match(/@([\w.-]+)/);
+    const idMatch = input.match(/UC[\w-]{22}/);
+    if (handleMatch) channelId = '@' + handleMatch[1];
+    else if (idMatch) channelId = idMatch[0];
+
+    let url = '';
+    if (channelId.startsWith('@')) {
+      url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${channelId.slice(1)}`;
+    } else if (channelId.startsWith('UC')) {
+      url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}`;
+    } else {
+      url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(input)}&maxResults=1`;
+    }
+
+    const r = await ytFetch(url);
+    let ch;
+    if (r.items?.[0]?.id?.channelId) {
+      const r2 = await ytFetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${r.items[0].id.channelId}`);
+      ch = r2.items?.[0];
+    } else { ch = r.items?.[0]; }
+    if (!ch) throw new Error('Channel not found');
+
+    const s = ch.statistics; const sn = ch.snippet;
+    const mySubs = parseInt(STATE.channelData?.statistics?.subscriberCount || 0);
+    const theirSubs = parseInt(s.subscriberCount || 0);
+    const myViews = parseInt(STATE.channelData?.statistics?.viewCount || 0);
+    const theirViews = parseInt(s.viewCount || 0);
+    const gap = theirSubs - mySubs;
+    const gapText = gap > 0 ? `You need ${fmtNum(gap)} more subscribers to match` : `You have ${fmtNum(Math.abs(gap))} more subscribers!`;
+
+    let aiInsight = '';
+    if (STATE.claudeKey) {
+      const prompt = `Compare these two YouTube channels and give 3 specific actionable strategies for the smaller channel to compete or differentiate.
+My channel: ${STATE.channelData?.snippet?.title}, ${fmtNum(mySubs)} subscribers, ${fmtNum(myViews)} views
+Their channel: ${sn.title}, ${fmtNum(theirSubs)} subscribers, ${fmtNum(theirViews)} views, Description: ${sn.description?.slice(0,200)}
+Return JSON: {"strategies":["strategy1","strategy2","strategy3"],"opportunity":"one key opportunity","warning":"one key risk"}`;
+      try {
+        const ai = await universalAIJson(prompt, STATE.claudeKey);
+        aiInsight = `<div class="card"><div class="card-title">AI Competitive Strategy</div>
+          ${ai.strategies.map(s=>`<div class="insight"><div class="insight-icon">⚔️</div><div class="insight-text">${s}</div></div>`).join('')}
+          <div style="margin-top:12px;padding:12px;background:rgba(48,209,88,0.08);border-radius:10px;border-left:3px solid var(--accent3);font-size:13px;color:#bdf5c8">💡 ${ai.opportunity}</div>
+          <div style="margin-top:8px;padding:12px;background:rgba(255,45,85,0.08);border-radius:10px;border-left:3px solid var(--accent);font-size:13px;color:#f5c8c8">⚠ ${ai.warning}</div>
+        </div>`;
+      } catch(e) {}
+    }
+
+    document.getElementById('comp-result').innerHTML = `
+      <div class="card">
+        <div class="channel-header">
+          <img class="channel-avatar" src="${sn.thumbnails?.default?.url||''}" alt="">
+          <div><div class="channel-name">${sn.title}</div><div class="channel-handle">Competitor Analysis</div></div>
+        </div>
+        <div class="comp-stat"><span class="comp-stat-label">Subscribers</span><span class="comp-stat-val" style="color:var(--accent2)">${fmtNum(s.subscriberCount)}</span></div>
+        <div class="comp-stat"><span class="comp-stat-label">Total Views</span><span class="comp-stat-val">${fmtNum(s.viewCount)}</span></div>
+        <div class="comp-stat"><span class="comp-stat-label">Videos</span><span class="comp-stat-val">${fmtNum(s.videoCount)}</span></div>
+        <div class="comp-stat"><span class="comp-stat-label">Avg Views/Video</span><span class="comp-stat-val">${fmtNum(Math.round(parseInt(s.viewCount)/parseInt(s.videoCount||1)))}</span></div>
+        <div style="margin-top:14px;padding:12px;background:rgba(191,90,242,0.08);border-radius:10px;font-size:13px;color:var(--accent2);font-family:var(--font-mono)">${gapText}</div>
+      </div>
+      ${aiInsight}`;
+  } catch(e) {
+    document.getElementById('comp-result').innerHTML = `<div class="error-box">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── Timing ───────────────────────────────────────────────
+function renderTiming() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const hours = ['6am','9am','12pm','3pm','6pm','9pm'];
+  // Heatmap data (best times based on research)
+  const heat = [
+    [0.3,0.5,0.4,0.6,0.7,0.8,0.5],
+    [0.5,0.7,0.6,0.8,0.9,1.0,0.7],
+    [0.4,0.6,0.7,0.7,0.8,0.9,0.8],
+    [0.3,0.5,0.6,0.6,0.7,0.8,0.9],
+    [0.6,0.8,0.7,0.8,1.0,0.9,0.7],
+    [0.3,0.4,0.5,0.5,0.6,0.7,0.5],
+  ];
+  const getColor = v => {
+    if (v >= 0.9) return '#30d158'; if (v >= 0.7) return '#ffd60a';
+    if (v >= 0.5) return '#ff9f0a'; return '#ff2d55';
+  };
+  let html = `<div style="display:grid;grid-template-columns:40px repeat(7,1fr);gap:4px;margin-bottom:12px">
+    <div></div>${days.map(d=>`<div class="time-day">${d}</div>`).join('')}`;
+  heat.forEach((row, hi) => {
+    html += `<div style="font-size:9px;color:var(--muted);font-family:var(--font-mono);line-height:32px">${hours[hi]}</div>`;
+    row.forEach(v => { html += `<div class="time-slot" style="background:${getColor(v)};opacity:${v}" title="${Math.round(v*100)}% audience active"></div>`; });
+  });
+  html += `</div>
+    <div style="display:flex;gap:16px;font-size:10px;font-family:var(--font-mono);color:var(--muted)">
+      <span style="color:#30d158">● Best</span><span style="color:#ffd60a">● Good</span><span style="color:#ff9f0a">● Average</span><span style="color:#ff2d55">● Low</span>
+    </div>
+    <div style="margin-top:14px;padding:14px;background:rgba(48,209,88,0.08);border-radius:10px;border-left:3px solid var(--accent3)">
+      <div style="font-size:11px;color:var(--accent3);font-family:var(--font-mono);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Top Slots</div>
+      <div style="font-size:13px;color:#ddd;line-height:1.8">Friday 6pm · Saturday 3-9pm · Sunday 12-3pm · Tuesday 9am</div>
+    </div>`;
+  document.getElementById('timing-content').innerHTML = html;
+}
+
+async function getSchedule() {
+  const niche = document.getElementById('niche-input').value.trim();
+  if (!niche || !STATE.claudeKey) { document.getElementById('schedule-result').innerHTML = '<div class="error-box">❌ Enter niche and add your AI key in setup.</div>'; return; }
+
+  document.getElementById('schedule-result').innerHTML = `<div class="loading-wrap" style="padding:20px"><div class="loading-bar"></div><div class="loading-text">${getProviderLabel(STATE.claudeKey)} building your schedule...</div></div>`;
+
+  const prompt = `Create a 4-week YouTube upload schedule for a "${niche}" creator. Return ONLY valid JSON (no markdown):
+{"schedule":[{"week":1,"uploads":[{"day":"Monday","time":"6:00 PM","topic":"video idea","reason":"why this day/time"}]},{"week":2,"uploads":[]},{"week":3,"uploads":[]},{"week":4,"uploads":[]}],"frequency":"recommended posts per week","tip":"key scheduling insight"}`;
+
+  try {
+    const a = await universalAIJson(prompt, STATE.claudeKey);
+    let html = `<div style="padding:12px;background:rgba(191,90,242,0.08);border-radius:10px;margin-bottom:14px;font-size:13px;color:var(--accent2);font-family:var(--font-mono)">Recommended: ${a.frequency}</div>`;
+    a.schedule.forEach(w => {
+      html += `<div style="margin-bottom:12px"><div class="card-title">Week ${w.week}</div>`;
+      w.uploads.forEach(u => {
+        html += `<div class="insight"><div class="insight-icon">📅</div><div class="insight-text"><strong style="color:#fff">${u.day} @ ${u.time}</strong><br>${u.topic}<br><span style="font-size:11px;color:var(--muted)">${u.reason}</span></div></div>`;
+      });
+      html += `</div>`;
+    });
+    html += `<div class="insight"><div class="insight-icon">💡</div><div class="insight-text">${a.tip}</div></div>`;
+    document.getElementById('schedule-result').innerHTML = html;
+  } catch(e) {
+    document.getElementById('schedule-result').innerHTML = `<div class="error-box">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── Monetization ─────────────────────────────────────────
+function renderMonetize() {
+  const subs = parseInt(STATE.channelData?.statistics?.subscriberCount || 0);
+  const views = parseInt(STATE.channelData?.statistics?.viewCount || 0);
+  document.getElementById('monetize-content').innerHTML = `
+    <div class="money-card">
+      <div class="money-title">YPP Eligibility Check</div>
+      <div class="comp-stat"><span class="comp-stat-label">Subscribers</span><span class="comp-stat-val" style="color:${subs>=1000?'var(--accent3)':'var(--accent)'}">${fmtNum(subs)} / 1,000 ${subs>=1000?'✅':'❌'}</span></div>
+      <div class="comp-stat"><span class="comp-stat-label">Watch Hours</span><span class="comp-stat-val" style="color:var(--gold)">Check Studio →</span></div>
+      <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7">You need 1,000 subscribers + 4,000 watch hours in the past 12 months to apply for YouTube Partner Program.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Revenue Streams</div>
+      ${[
+        {icon:'💰',title:'AdSense (YPP)',desc:'$1–$5 CPM for most niches. Finance/tech earns more ($8–20 CPM). Enable at 1K subs + 4K watch hours.'},
+        {icon:'🤝',title:'Brand Sponsorships',desc:'Start pitching brands at 1K–5K subscribers in niche content. Rates: $50–$500 per video at small scale.'},
+        {icon:'🛍️',title:'Affiliate Marketing',desc:'Amazon Associates, ShareASale. Add affiliate links in description. Earns commissions on purchases.'},
+        {icon:'👕',title:'Merchandise',desc:'Use Printful, Merch by Amazon, or YouTube Merch shelf (10K subs). Great passive income.'},
+        {icon:'💎',title:'Channel Memberships',desc:'Available at 1K subscribers. Offer exclusive content for $0.99–$99/month tiers.'},
+        {icon:'📚',title:'Digital Products',desc:'Sell courses, presets, templates, or ebooks. Highest margin revenue stream.'},
+      ].map(r=>`<div class="insight"><div class="insight-icon">${r.icon}</div><div class="insight-text"><strong style="color:#fff">${r.title}</strong><br>${r.desc}</div></div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Revenue Estimator</div>
+      <div class="field-group" style="margin-bottom:12px">
+        <label class="field-label">Monthly Views</label>
+        <input type="number" class="field-input" id="rev-views" placeholder="e.g. 50000" oninput="calcRevenue()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Niche CPM Rate</label>
+        <select class="field-input" id="rev-cpm" onchange="calcRevenue()">
+          <option value="2">General ($2 CPM)</option>
+          <option value="4">Entertainment ($4 CPM)</option>
+          <option value="6">Tech/Gaming ($6 CPM)</option>
+          <option value="10">Finance/Business ($10 CPM)</option>
+          <option value="15">High-value Finance ($15 CPM)</option>
+        </select>
+      </div>
+      <div id="rev-result" style="margin-top:12px"></div>
+    </div>`;
+}
+
+function calcRevenue() {
+  const views = parseInt(document.getElementById('rev-views')?.value || 0);
+  const cpm = parseFloat(document.getElementById('rev-cpm')?.value || 2);
+  if (!views) return;
+  const monthly = (views / 1000) * cpm * 0.55; // 45% YouTube cut
+  const yearly = monthly * 12;
+  document.getElementById('rev-result').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="stat-box"><div class="stat-val" style="font-size:24px;color:var(--gold)">$${Math.round(monthly).toLocaleString()}</div><div class="stat-label">Est. Monthly</div></div>
+      <div class="stat-box"><div class="stat-val" style="font-size:24px;color:var(--accent3)">$${Math.round(yearly).toLocaleString()}</div><div class="stat-label">Est. Yearly</div></div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);font-family:var(--font-mono)">Based on AdSense only. Add sponsorships + affiliates to 3–5x this estimate.</div>`;
+}
+
+// ─── Video Detail Modal ───────────────────────────────────
+function openVideoDetail(id) {
+  const v = STATE.videos.find(x => x.id === id);
+  if (!v) return;
+  const s = v.snippet; const st = v.statistics;
+  const score = seoScore(v);
+  document.getElementById('modal-content').innerHTML = `
+    <div style="font-family:var(--font-display);font-size:22px;letter-spacing:1px;margin-bottom:14px">${s.title}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${[['👁 Views',st.viewCount],['👍 Likes',st.likeCount],['💬 Comments',st.commentCount],['🏷️ Tags',(s.tags||[]).length]].map(([l,v])=>
+        `<div class="stat-box"><div class="stat-val" style="font-size:22px">${fmtNum(v)}</div><div class="stat-label">${l}</div></div>`
+      ).join('')}
+    </div>
+    <div style="margin-bottom:16px"><div class="card-title">SEO Score ${seoBadge(score)}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${score}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div></div>
+    <div style="margin-bottom:16px"><div class="card-title">Current Tags</div>
+    <div class="tag-cloud">${(s.tags||[]).map(t=>`<span class="tag-item">${t}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">No tags set</span>'}</div></div>
+    <div><div class="card-title">Description Preview</div>
+    <div style="font-size:12px;color:var(--muted);font-family:var(--font-mono);line-height:1.7;max-height:120px;overflow-y:auto">${(s.description||'No description').slice(0,500)}...</div></div>
+    <button class="btn-primary" style="margin-top:20px" onclick="closeModal();switchTab('optimizer');document.getElementById('optimizer-select').value='${id}'">
+      ⚡ OPTIMIZE THIS VIDEO
+    </button>`;
+  document.getElementById('video-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('video-modal').classList.remove('open'); }
+
+// ─── Utilities ────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.nav-tab').forEach((t,i) => {
+    const tabs = ['dashboard','videos','optimizer','tags','competitor','timing','monetize'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function copyText(text) {
+  navigator.clipboard?.writeText(text).then(() => showToast('Copied!'));
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// Close modal on overlay click
+document.getElementById('video-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
